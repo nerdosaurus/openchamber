@@ -469,7 +469,7 @@ export const useChatAutoFollow = ({
 
         const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
         const inGrace = (now - lastUserReleaseAtRef.current) < REPIN_GRACE_AFTER_RELEASE_MS;
-        if (stateRef.current === 'released' && isNearBottom(container, isMobile) && !inGrace) {
+        if (stateRef.current === 'released' && isNearBottom(container, isMobile) && (!inGrace || sessionWorkingRef.current)) {
             setStateValue('following');
             if (sessionWorkingRef.current) {
                 startFollowLoop();
@@ -564,12 +564,8 @@ export const useChatAutoFollow = ({
 
         const observer = new ResizeObserver(() => {
             updateOverflowAndButton();
-            if (stateRef.current === 'following') {
-                if (sessionWorkingRef.current) {
-                    startFollowLoop();
-                } else {
-                    startSettleBurst();
-                }
+            if (stateRef.current === 'following' && sessionWorkingRef.current) {
+                startFollowLoop();
             }
         });
         observer.observe(container);
@@ -578,7 +574,7 @@ export const useChatAutoFollow = ({
             observer.observe(inner);
         }
         return () => observer.disconnect();
-    }, [containerEl, startFollowLoop, startSettleBurst, updateOverflowAndButton]);
+    }, [containerEl, startFollowLoop, updateOverflowAndButton]);
 
     React.useEffect(() => {
         updateOverflowAndButton();
